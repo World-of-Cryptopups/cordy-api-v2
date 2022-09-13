@@ -31,7 +31,7 @@ async def get_dps(wallet: str, res: Response):
     if len(userQuery.items) == 0:
         return {
             "error": True,
-            "data": {},
+            "data": None,
             "message": "Wallet does not exist in database.",
         }
 
@@ -41,4 +41,8 @@ async def get_dps(wallet: str, res: Response):
     # fetch the user's dps
     dps = dpsDB.get(user["id"])
 
-    return {"wallet": user["wallet"], "id": user["id"], "dps": dps["dps"]}
+    return {
+        "error": False,
+        "data": {"wallet": user["wallet"], "id": user["id"], "dps": dps["dps"]},
+        "message": None,
+    }
