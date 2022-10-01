@@ -1,6 +1,9 @@
+from typing import Dict, List
 from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from db import dpsDB, usersDB
+from lib import calc_dps
+from utils import identify_dps_role
 
 app = FastAPI()
 
@@ -41,8 +44,36 @@ async def get_dps(wallet: str, res: Response):
     # fetch the user's dps
     dps = dpsDB.get(user["id"])
 
+    dps_role = identify_dps_role(dps["dps"])
+
     return {
         "error": False,
-        "data": {"wallet": user["wallet"], "id": user["id"], "dps": dps["dps"]},
+        "data": {
+            "wallet": user["wallet"],
+            "id": user["id"],
+            "dps": dps["dps"],
+            "role": dps_role,
+        },
         "message": None,
     }
+
+
+@app.get("/leaderboard")
+async def leaderboard():
+    try:
+        q = dpsDB.fetch()
+        allitems: List[Dict] = q.items
+
+        while q.last:
+            q = dpsDB.fetch(last=q.last)
+            allitems += q.items
+
+    except Exception as e:
+        return {"error": True, "data": None, "message": e}
+
+    allitems.sort(
+        key=lambda i: calc_dps(i["dps"]),
+        reverse=True,
+    )
+
+    return {"error": False, "data": allitems, "message": ""}
