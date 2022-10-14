@@ -2,7 +2,7 @@ from typing import Dict, List
 from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from db import dpsDB, usersDB
-from lib import calc_dps
+from filter import filter_rankings
 from utils import identify_dps_role
 
 app = FastAPI()
@@ -71,9 +71,6 @@ async def leaderboard():
     except Exception as e:
         return {"error": True, "data": None, "message": e}
 
-    allitems.sort(
-        key=lambda i: calc_dps(i["dps"]),
-        reverse=True,
-    )
+    rankings = filter_rankings(allitems)
 
-    return {"error": False, "data": allitems, "message": ""}
+    return {"error": False, "data": rankings, "message": ""}
